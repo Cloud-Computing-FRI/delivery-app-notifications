@@ -1,0 +1,16 @@
+notifications service "{{ .Release.Name }}" installed (chart {{ include "notifications.chart" . }}).
+
+Service: {{ include "notifications.fullname" . }} (type {{ .Values.service.type }}, port {{ .Values.port }})
+Database: {{ if .Values.postgresql.enabled }}in-cluster PostgreSQL ({{ include "notifications.fullname" . }}-db){{ else }}external — DATABASE_URL read from Secret "{{ include "notifications.dbSecret" . }}"{{ end }}.
+
+Sibling services (and the UI) address this one at:
+  http://{{ include "notifications.fullname" . }}:{{ .Values.port }}
+(keep fullnameOverride at its default so that name stays stable for peers.)
+
+Check it from inside the cluster:
+  kubectl port-forward svc/{{ include "notifications.fullname" . }} 8000:{{ .Values.port }}
+  curl http://localhost:8000/health
+
+List the release:   helm list
+Upgrade an env:     helm upgrade {{ .Release.Name }} <chart> -f values-<env>.yaml
+Roll back:          helm rollback {{ .Release.Name }}
